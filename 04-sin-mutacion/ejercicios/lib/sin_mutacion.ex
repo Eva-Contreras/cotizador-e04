@@ -8,7 +8,12 @@ defmodule SinMutacion do
       mix test test/sin_mutacion_test.exs
   """
 
-  def total_pesos(_embarques), do: raise("por implementar")
+  def total_pesos(_embarques) do
+    Enum.reduce(embarques, 0, fn embarque, total ->
+      total + embarque.peso_kg
+    end)
+  end
+
   def marcar_urgentes(_embarques), do: raise("por implementar")
   def aplicar_descuento(_precios, _pct), do: raise("por implementar")
   def contar_por_tipo(_embarques), do: raise("por implementar")
