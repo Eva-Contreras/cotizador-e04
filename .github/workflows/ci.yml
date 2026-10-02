@@ -18,13 +18,17 @@ jobs:
           otp-version: '29.0'
           
       - name: Instalar dependencias
+        working-directory: ./04-sin-mutacion/ejercicios
         run: mix deps.get
         
       - name: Compilar proyecto
+        working-directory: ./04-sin-mutacion/ejercicios
         run: mix compile --warnings-as-errors
         
       - name: Análisis de formato (opcional)
+        working-directory: ./04-sin-mutacion/ejercicios
         run: mix format --check-formatted
         
       - name: Pruebas
+        working-directory: ./04-sin-mutacion/ejercicios
         run: mix test
