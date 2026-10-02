@@ -1,0 +1,13 @@
+{
+  "name": "04-sin-mutacion",
+  "version": "1.0.0",
+  "description": "Unidad 2 · Paradigma funcional en Elixir",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
