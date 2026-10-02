@@ -17,5 +17,5 @@ junto con tu `sin_mutacion.ex`, y llena la tabla. Entrega: hoy antes de las 23:5
 
 ¿Cuál de las cinco era la más peligrosa en TypeScript, y por qué? (dos líneas)
 
-La más peligrosa es 2, porque modifica directamente los objetos originales que recibió.
-Cualquier otra parte del programa que tenga esos mismos objetos puede ver el cambio sin esperarlo.
+La más peligrosa es 2, aunque la 3 se acerca al peligro sin embargo la 2 modifica directamente los objetos originales que recibió.
+Cualquier otra parte del programa que tenga esos mismos objetos puede ver el cambio sin esperarlo, lo que podria afectar demasiado.

@@ -10,14 +10,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      
+      - name: Configurar Elixir
+        uses: erlef/setup-beam@v1
         with:
-          node-version: '22'
-          cache: npm
-      - run: npm ci
-      - name: Tipos
-        run: npm run typecheck
-      - name: Análisis estático
-        run: npm run lint
+          elixir-version: '1.20.4'
+          otp-version: '29.0'
+          
+      - name: Instalar dependencias
+        run: mix deps.get
+        
+      - name: Compilar proyecto
+        run: mix compile --warnings-as-errors
+        
+      - name: Análisis de formato (opcional)
+        run: mix format --check-formatted
+        
       - name: Pruebas
-        run: npm test
+        run: mix test
