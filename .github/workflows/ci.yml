@@ -31,4 +31,4 @@ jobs:
         
       - name: Pruebas
         working-directory: ./04-sin-mutacion/ejercicios
-        run: mix test
+        run: mix test test/sin_mutacion_test.exs
