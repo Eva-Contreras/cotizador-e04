@@ -8,9 +8,34 @@ defmodule Patrones do
       mix test test/patrones_test.exs
   """
 
-  def descripcion(_embarque), do: raise("por implementar")
-  def documentos_completos?(_embarque), do: raise("por implementar")
-  def clasificar_peso(_kg), do: raise("por implementar")
-  def mensaje(_resultado), do: raise("por implementar")
-  def primer_id(_embarques), do: raise("por implementar")
+  def descripcion(%{tipo: :general}), do: "Carga general"
+  def descripcion(%{tipo: :refrigerada}), do: "Carga refrigerada"
+
+  def descripcion(%{tipo: :peligrosa, numero_un: numero_un}),
+    do: "Carga peligrosa (#{numero_un})"
+
+  def descripcion(%{tipo: :sobredimensionada}), do: "Carga sobredimensionada"
+
+  def documentos_completos?(%{tipo: :general}), do: true
+
+  def documentos_completos?(%{tipo: :peligrosa, numero_un: numero_un})
+      when not is_nil(numero_un),
+      do: true
+
+  def documentos_completos?(%{tipo: :sobredimensionada, permiso: permiso})
+      when not is_nil(permiso),
+      do: true
+
+  def documentos_completos?(_), do: false
+
+  def clasificar_peso(kg) when kg <= 0, do: :invalido
+  def clasificar_peso(kg) when kg < 1_000, do: :ligero
+  def clasificar_peso(kg) when kg < 10_000, do: :medio
+  def clasificar_peso(_), do: :pesado
+
+  def mensaje({:ok, total}), do: "Total: #{total}"
+  def mensaje({:error, motivo}), do: "Rechazado: #{motivo}"
+
+  def primer_id([]), do: :vacio
+  def primer_id([%{id: id} | _]), do: id
 end
