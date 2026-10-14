@@ -13,12 +13,6 @@ defmodule Cotizador do
   defp validar(%{distancia_km: d}, _reglas) when d <= 0,
     do: {:error, :distancia_invalida}
 
-  defp validar(%{tipo: :peligrosa, numero_un: nil}, _reglas),
-    do: {:error, :falta_numero_un}
-
-  defp validar(%{tipo: :sobredimensionada, permiso: nil}, _reglas),
-    do: {:error, :falta_permiso}
-
   defp validar(%{tipo: tipo}, _reglas) when tipo not in @tipos,
     do: {:error, :tipo_desconocido}
 
@@ -28,6 +22,12 @@ defmodule Cotizador do
        )
        when not is_map_key(cuotas, puente),
        do: {:error, :puente_desconocido}
+
+  defp validar(%{tipo: :peligrosa, numero_un: nil}, _reglas),
+    do: {:error, :falta_numero_un}
+
+  defp validar(%{tipo: :sobredimensionada, permiso: nil}, _reglas),
+    do: {:error, :falta_permiso}
 
   defp validar(%{tipo: :sobredimensionada}, _reglas), do: :ok
 
