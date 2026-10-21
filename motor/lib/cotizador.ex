@@ -7,6 +7,50 @@ defmodule Cotizador do
     end
   end
 
+  def resumen(embarques, reglas) do
+    resumen =
+      embarques
+      |> Enum.map(fn embarque -> {embarque, cotizar(embarque, reglas)} end)
+      |> Enum.reduce(
+        %{
+          cotizados: 0,
+          rechazados: [],
+          totales: [],
+          por_puente: %{comercio_mundial: 0, colombia: 0}
+        },
+        fn
+          {embarque, {:ok, cotizacion}}, acumulado ->
+            %{
+              acumulado
+              | cotizados: acumulado.cotizados + 1,
+                totales: [cotizacion.total | acumulado.totales],
+                por_puente:
+                  Map.update!(
+                    acumulado.por_puente,
+                    embarque.puente,
+                    &(&1 + cotizacion.total)
+                  )
+            }
+
+          {embarque, {:error, motivo}}, acumulado ->
+            %{
+              acumulado
+              | rechazados: [{embarque.id, motivo} | acumulado.rechazados]
+            }
+        end
+      )
+
+    %{
+      cotizados: resumen.cotizados,
+      rechazados: Enum.reverse(resumen.rechazados),
+      total: sumar_totales(resumen.totales),
+      por_puente: resumen.por_puente
+    }
+  end
+
+  defp sumar_totales([]), do: 0
+  defp sumar_totales([total | restantes]), do: total + sumar_totales(restantes)
+
   defp validar(%{peso_kg: p}, _reglas) when p <= 0,
     do: {:error, :peso_invalido}
 
