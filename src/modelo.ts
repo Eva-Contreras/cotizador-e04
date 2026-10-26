@@ -77,10 +77,77 @@ export type Reglas = {
 };
 
 export function cotizar(
-  _b: Borrador,
-  _r: Reglas,
+  b: Borrador,
+  r: Reglas,
 ): Cotizado | Rechazado {
-  throw new Error('por implementar');
+  const e = b.embarque;
+
+  if (e.pesoKg <= 0) {
+    return { estado: 'rechazado', embarque: e, motivo: 'peso_invalido' };
+  }
+
+  if (e.distanciaKm < 0) {
+    return {
+      estado: 'rechazado',
+      embarque: e,
+      motivo: 'distancia_invalida',
+    };
+  }
+
+  if (
+    e.pesoKg > r.pesoMaximoKg &&
+    e.tipo !== 'sobredimensionada'
+  ) {
+    return {
+      estado: 'rechazado',
+      embarque: e,
+      motivo: 'excede_peso_maximo',
+    };
+  }
+
+  const fleteBruto = e.distanciaKm * r.tarifaKm;
+
+  const aplicaDescuento =
+    r.descuento.criterio === 'a_partir_de'
+      ? e.pesoKg >= r.descuento.umbralKg
+      : e.pesoKg > r.descuento.umbralKg;
+
+  const descuento = aplicaDescuento
+    ? Math.floor((fleteBruto * r.descuento.pct + 50) / 100)
+    : 0;
+
+  const flete = fleteBruto - descuento;
+  const cuotaPuente = r.cuotaPuente[e.puente];
+  const reglaRecargo = r.recargo[e.tipo];
+
+  const baseRecargo =
+    r.baseRecargo === 'flete'
+      ? flete
+      : flete + cuotaPuente;
+
+  const recargo = Math.floor(
+    (baseRecargo * reglaRecargo.pct + 50) / 100,
+  ) + reglaRecargo.fija;
+
+  const subtotal = flete + cuotaPuente + recargo;
+  const ajusteMinimo = Math.max(0, r.minimo - subtotal);
+
+  const cotizacion: Cotizacion = {
+    id: e.id,
+    fleteBruto,
+    descuento,
+    flete,
+    cuotaPuente,
+    recargo,
+    ajusteMinimo,
+    total: subtotal + ajusteMinimo,
+  };
+
+  return {
+    estado: 'cotizado',
+    embarque: e,
+    cotizacion,
+  };
 }
 
 export function despachar(
