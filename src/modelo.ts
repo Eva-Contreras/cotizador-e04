@@ -94,7 +94,7 @@ function validar(
     return { ok: false, error: 'peso_invalido' };
   }
 
-  if (e.distanciaKm < 0) {
+  if (e.distanciaKm <= 0) {
     return { ok: false, error: 'distancia_invalida' };
   }
 
