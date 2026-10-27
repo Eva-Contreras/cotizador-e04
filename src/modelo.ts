@@ -76,67 +76,123 @@ export type Reglas = {
   pesoMaximoKg: number;
 };
 
+const POLITICAS: Record<
+  Carga['tipo'],
+  { aplicaPesoMaximo: boolean }
+> = {
+  general: { aplicaPesoMaximo: true },
+  refrigerada: { aplicaPesoMaximo: true },
+  peligrosa: { aplicaPesoMaximo: true },
+  sobredimensionada: { aplicaPesoMaximo: false },
+};
+
+function validar(
+  e: Embarque,
+  r: Reglas,
+): Resultado<Embarque, Motivo> {
+  if (e.pesoKg <= 0) {
+    return { ok: false, error: 'peso_invalido' };
+  }
+
+  if (e.distanciaKm < 0) {
+    return { ok: false, error: 'distancia_invalida' };
+  }
+
+  if (
+    POLITICAS[e.tipo].aplicaPesoMaximo &&
+    e.pesoKg > r.pesoMaximoKg
+  ) {
+    return { ok: false, error: 'excede_peso_maximo' };
+  }
+
+  return { ok: true, valor: e };
+}
+
+function calcularDescuento(
+  pesoKg: number,
+  fleteBruto: number,
+  reglas: Reglas,
+): number {
+  const aplica =
+    reglas.descuento.criterio === 'a_partir_de'
+      ? pesoKg >= reglas.descuento.umbralKg
+      : pesoKg > reglas.descuento.umbralKg;
+
+  return aplica
+    ? Math.floor((fleteBruto * reglas.descuento.pct + 50) / 100)
+    : 0;
+}
+
+function calcularFlete(
+  e: Embarque,
+  reglas: Reglas,
+): { fleteBruto: number; descuento: number; flete: number } {
+  const fleteBruto = e.distanciaKm * reglas.tarifaKm;
+  const descuento = calcularDescuento(
+    e.pesoKg,
+    fleteBruto,
+    reglas,
+  );
+
+  return {
+    fleteBruto,
+    descuento,
+    flete: fleteBruto - descuento,
+  };
+}
+
+function calcularRecargo(
+  e: Embarque,
+  flete: number,
+  cuotaPuente: number,
+  reglas: Reglas,
+): number {
+  const regla = reglas.recargo[e.tipo];
+
+  const base =
+    reglas.baseRecargo === 'flete'
+      ? flete
+      : flete + cuotaPuente;
+
+  return (
+    Math.floor((base * regla.pct + 50) / 100) +
+    regla.fija
+  );
+}
+
 export function cotizar(
   b: Borrador,
   r: Reglas,
 ): Cotizado | Rechazado {
   const e = b.embarque;
+  const validacion = validar(e, r);
 
-  if (e.pesoKg <= 0) {
-    return { estado: 'rechazado', embarque: e, motivo: 'peso_invalido' };
-  }
-
-  if (e.distanciaKm < 0) {
+  if (!validacion.ok) {
     return {
       estado: 'rechazado',
       embarque: e,
-      motivo: 'distancia_invalida',
+      motivo: validacion.error,
     };
   }
 
-  if (
-    e.pesoKg > r.pesoMaximoKg &&
-    e.tipo !== 'sobredimensionada'
-  ) {
-    return {
-      estado: 'rechazado',
-      embarque: e,
-      motivo: 'excede_peso_maximo',
-    };
-  }
-
-  const fleteBruto = e.distanciaKm * r.tarifaKm;
-
-  const aplicaDescuento =
-    r.descuento.criterio === 'a_partir_de'
-      ? e.pesoKg >= r.descuento.umbralKg
-      : e.pesoKg > r.descuento.umbralKg;
-
-  const descuento = aplicaDescuento
-    ? Math.floor((fleteBruto * r.descuento.pct + 50) / 100)
-    : 0;
-
-  const flete = fleteBruto - descuento;
+  const calculoFlete = calcularFlete(validacion.valor, r);
   const cuotaPuente = r.cuotaPuente[e.puente];
-  const reglaRecargo = r.recargo[e.tipo];
 
-  const baseRecargo =
-    r.baseRecargo === 'flete'
-      ? flete
-      : flete + cuotaPuente;
+  const recargo = calcularRecargo(
+    validacion.valor,
+    calculoFlete.flete,
+    cuotaPuente,
+    r,
+  );
 
-  const recargo = Math.floor(
-    (baseRecargo * reglaRecargo.pct + 50) / 100,
-  ) + reglaRecargo.fija;
+  const subtotal =
+    calculoFlete.flete + cuotaPuente + recargo;
 
-  const subtotal = flete + cuotaPuente + recargo;
   const ajusteMinimo = Math.max(0, r.minimo - subtotal);
 
   const cotizacion: Cotizacion = {
     id: e.id,
-    fleteBruto,
-    descuento,
-    flete,
+    ...calculoFlete,
     cuotaPuente,
     recargo,
     ajusteMinimo,
