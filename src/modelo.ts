@@ -207,8 +207,13 @@ export function cotizar(
 }
 
 export function despachar(
-  _c: Cotizado,
-  _folio: string,
+  c: Cotizado,
+  folio: string,
 ): Despachado {
-  throw new Error('por implementar');
+  return {
+    estado: 'despachado',
+    embarque: c.embarque,
+    cotizacion: c.cotizacion,
+    folio,
+  };
 }
