@@ -14,4 +14,18 @@ rechazo(embarque(_, _, _, peligrosa, _, none, _), falta_numero_un).
 rechazo(embarque(_, _, _, sobredimensionada, _, _, none), falta_permiso).
 rechazo(embarque(_, Peso, _, Tipo, _, _, _), excede_peso_maximo) :- Tipo \== sobredimensionada, peso_maximo(Max), Peso > Max.
 
-calcular(_, cotizacion(0, 0, 0, 0, 0, 0, 0)).
+pct(Monto, P, R) :- R is (Monto * P + 50) // 100.
+
+aplica_descuento(Peso) :- descuento(Umbral, _, a_partir_de), Peso >= Umbral.
+aplica_descuento(Peso) :- descuento(Umbral, _, mas_de), Peso > Umbral.
+
+monto_descuento(Peso, Bruto, D) :- aplica_descuento(Peso), !, descuento(_, P, _), pct(Bruto, P, D).
+monto_descuento(_, _, 0).
+
+calcular(embarque(_, Peso, Dist, _, Puente, _, _), cotizacion(Bruto, Desc, Flete, Cuota, 0, 0, Total)) :-
+    tarifa_km(Tarifa),
+    Bruto is Dist * Tarifa,
+    monto_descuento(Peso, Bruto, Desc),
+    Flete is Bruto - Desc,
+    cuota_puente(Puente, Cuota),
+    Total is Flete + Cuota.
